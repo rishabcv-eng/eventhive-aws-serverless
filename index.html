@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EventHive · Campus Events</title>
+<script src="config.js"></script>
+<style>
+:root{--bg:#0f1220;--card:#181c2e;--line:#272c45;--text:#e8eaf4;--muted:#9aa0bd;--accent:#ff9900;--accent2:#5b8cff;--ok:#2fbf71;--bad:#ff5d6c}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(15,18,32,.92);backdrop-filter:blur(8px);z-index:5}
+.logo{font-weight:800;font-size:20px;letter-spacing:.3px}
+.logo span{color:var(--accent)}
+nav button{background:none;border:1px solid transparent;color:var(--muted);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+nav button.on{color:var(--text);border-color:var(--line);background:var(--card)}
+main{max-width:1100px;margin:0 auto;padding:28px}
+.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px}
+.hero h1{margin:0 0 6px;font-size:28px}
+.hero p{margin:0;color:var(--muted)}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:99px;border:1px solid var(--line);color:var(--muted);cursor:pointer;font-size:13px;background:none}
+.chip.on{border-color:var(--accent);color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:17px}
+.meta{color:var(--muted);font-size:13px;display:flex;gap:12px;flex-wrap:wrap}
+.tag{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent2);font-weight:700}
+.bar{height:8px;background:#0b0e19;border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:99px;transition:width .5s}
+.seats{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.btn{background:var(--accent);color:#111;border:0;padding:10px 14px;border-radius:9px;font-weight:700;cursor:pointer}
+.btn:disabled{background:#3a3f5c;color:var(--muted);cursor:not-allowed}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--text)}
+.btn.danger{background:none;border:1px solid var(--bad);color:var(--bad);padding:6px 10px;font-size:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.on{display:flex}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px;width:100%;max-width:420px}
+.box h2{margin:0 0 4px;font-size:20px}
+label{display:block;font-size:12px;color:var(--muted);margin:12px 0 5px}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);background:#0b0e19;color:var(--text);font:inherit}
+.row{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+.msg{margin-top:10px;font-size:13px;min-height:18px}
+.msg.err{color:var(--bad)}
+.ticket{border:2px dashed var(--accent);border-radius:12px;padding:18px;text-align:center;margin-top:12px}
+.ticket b{font-size:26px;letter-spacing:2px;color:var(--accent);display:block;margin-top:6px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.kpi small{color:var(--muted)}
+.kpi div{font-size:28px;font-weight:800;margin-top:4px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.panel h3{margin:0 0 14px;font-size:16px}
+.hbar{display:grid;grid-template-columns:220px 1fr 70px;gap:10px;align-items:center;font-size:13px;margin:8px 0}
+.hbar .bar{height:12px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ok);color:#06210f;padding:12px 16px;border-radius:10px;font-weight:600;display:none}
+footer{color:var(--muted);text-align:center;font-size:12px;padding:30px}
+@media(max-width:760px){.two{grid-template-columns:1fr}.hbar{grid-template-columns:120px 1fr 50px}main{padding:16px}header{padding:14px 16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Event<span>Hive</span></div>
+  <nav>
+    <button id="tabEvents" class="on" onclick="show('events')">Events</button>
+    <button id="tabAdmin" onclick="show('admin')">Admin</button>
+  </nav>
+</header>
+
+<main>
+  <section id="events">
+    <div class="hero">
+      <div>
+        <h1>What's happening on campus</h1>
+        <p>Grab a seat before they fill up. Seats are locked atomically, so no overbooking.</p>
+      </div>
+      <div class="filters" id="filters"></div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <section id="admin" style="display:none">
+    <div id="lock" class="panel" style="max-width:420px">
+      <h3>Admin login</h3>
+      <label>Admin key</label>
+      <input id="key" type="password" placeholder="enter admin key">
+      <div class="row"><button class="btn" onclick="unlock()">Open dashboard</button></div>
+      <div class="msg err" id="lockMsg"></div>
+    </div>
+    <div id="dash" style="display:none">
+      <div class="kpis">
+        <div class="kpi"><small>Events</small><div id="kEvents">0</div></div>
+        <div class="kpi"><small>Registrations</small><div id="kRegs">0</div></div>
+        <div class="kpi"><small>Total seats</small><div id="kCap">0</div></div>
+        <div class="kpi"><small>Overall fill rate</small><div id="kFill">0%</div></div>
+      </div>
+      <div class="two">
+        <div class="panel"><h3>Fill rate by event</h3><div id="fillBars"></div></div>
+        <div class="panel"><h3>Registrations by category</h3><div id="catBars"></div></div>
+      </div>
+      <div class="two">
+        <div class="panel">
+          <h3>Create event</h3>
+          <label>Title</label><input id="nTitle">
+          <label>Venue</label><input id="nVenue">
+          <div class="two" style="gap:10px">
+            <div><label>Date</label><input id="nDate" type="date"></div>
+            <div><label>Capacity</label><input id="nCap" type="number" min="1" value="50"></div>
+          </div>
+          <label>Category</label>
+          <select id="nCat"><option>Workshop</option><option>Hackathon</option><option>Talk</option><option>Sports</option><option>Cultural</option></select>
+          <div class="row"><button class="btn" onclick="createEvent()">Publish event</button></div>
+          <div class="msg" id="createMsg"></div>
+        </div>
+        <div class="panel">
+          <h3>Attendees</h3>
+          <select id="attSel" onchange="loadAttendees()"></select>
+          <div style="max-height:300px;overflow:auto;margin-top:10px"><table id="attTable"></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal">
+  <div class="box">
+    <div id="formView">
+      <h2 id="mTitle"></h2>
+      <div class="meta" id="mMeta"></div>
+      <label>Full name</label><input id="rName">
+      <label>VIT email</label><input id="rEmail" type="email" placeholder="name@vitstudent.ac.in">
+      <label>Register number</label><input id="rReg" placeholder="24BCE0000">
+      <div class="msg err" id="rMsg"></div>
+      <div class="row"><button class="btn ghost" onclick="closeModal()">Cancel</button><button class="btn" id="rBtn" onclick="submitReg()">Confirm seat</button></div>
+    </div>
+    <div id="ticketView" style="display:none">
+      <h2>You're in!</h2>
+      <div class="ticket"><span id="tName"></span><b id="tCode"></b><small id="tEvent"></small></div>
+      <div class="row"><button class="btn" onclick="closeModal()">Done</button></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<footer>EventHive · S3 + CloudFront · API Gateway · Lambda · DynamoDB · SNS</footer>
+
+<script>
+const API = (window.API_BASE || "/api").replace(/\/$/, "")
+let all = [], cat = "All", current = null, adminKey = ""
+
+async function call(path, opts = {}) {
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...(adminKey ? { "x-admin-key": adminKey } : {}), ...(opts.headers || {}) }
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || "request failed")
+  return data
+}
+
+function show(id) {
+  events.style.display = id === "events" ? "" : "none"
+  admin.style.display = id === "admin" ? "" : "none"
+  tabEvents.classList.toggle("on", id === "events")
+  tabAdmin.classList.toggle("on", id === "admin")
+}
+
+function fmtDate(d) {
+  return new Date(d + "T00:00:00").toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })
+}
+
+async function loadEvents() {
+  all = await call("/events")
+  const cats = ["All", ...new Set(all.map(e => e.category))]
+  filters.innerHTML = cats.map(c => `<button class="chip ${c === cat ? "on" : ""}" onclick="cat='${c}';render()">${c}</button>`).join("")
+  render()
+}
+
+function render() {
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.textContent === cat))
+  const list = all.filter(e => cat === "All" || e.category === cat)
+  grid.innerHTML = list.map(e => {
+    const left = e.capacity - e.registered, pct = Math.round(100 * e.registered / e.capacity)
+    return `<div class="card">
+      <div class="tag">${e.category}</div>
+      <h3>${e.title}</h3>
+      <div class="meta"><span>📅 ${fmtDate(e.date)}</span><span>📍 ${e.venue}</span></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <div class="seats"><span>${e.registered}/${e.capacity} booked</span><span>${left ? left + " left" : "Full"}</span></div>
+      <button class="btn" ${left ? "" : "disabled"} onclick="openModal('${e.eventId}')">${left ? "Register" : "Sold out"}</button>
+    </div>`
+  }).join("") || "<p>No events yet.</p>"
+}
+
+function openModal(id) {
+  current = all.find(e => e.eventId === id)
+  mTitle.textContent = current.title
+  mMeta.innerHTML = `<span>📅 ${fmtDate(current.date)}</span><span>📍 ${current.venue}</span>`
+  rMsg.textContent = ""
+  formView.style.display = ""
+  ticketView.style.display = "none"
+  modal.classList.add("on")
+}
+
+function closeModal() { modal.classList.remove("on") }
+
+async function submitReg() {
+  rBtn.disabled = true
+  rMsg.textContent = ""
+  try {
+    const t = await call(`/events/${current.eventId}/register`, {
+      method: "POST",
+      body: JSON.stringify({ name: rName.value, email: rEmail.value, regno: rReg.value })
+    })
+    tName.textContent = t.name
+    tCode.textContent = t.ticket
+    tEvent.textContent = current.title
+    formView.style.display = "none"
+    ticketView.style.display = ""
+    loadEvents()
+  } catch (e) {
+    rMsg.textContent = e.message
+  }
+  rBtn.disabled = false
+}
+
+async function unlock() {
+  adminKey = key.value
+  try {
+    await loadStats()
+    lock.style.display = "none"
+    dash.style.display = ""
+  } catch (e) {
+    adminKey = ""
+    lockMsg.textContent = e.message
+  }
+}
+
+function bars(rows) {
+  return rows.map(r => `<div class="hbar"><span>${r.label}</span><div class="bar"><i style="width:${r.pct}%"></i></div><span>${r.text}</span></div>`).join("")
+}
+
+async function loadStats() {
+  const s = await call("/stats")
+  kEvents.textContent = s.events
+  kRegs.textContent = s.registrations
+  kCap.textContent = s.capacity
+  kFill.textContent = s.fillRate + "%"
+  fillBars.innerHTML = bars(s.perEvent.map(e => ({ label: e.title, pct: e.fill, text: e.fill + "%" })))
+  const max = Math.max(1, ...Object.values(s.byCategory))
+  catBars.innerHTML = bars(Object.entries(s.byCategory).map(([k, v]) => ({ label: k, pct: 100 * v / max, text: v })))
+  const evs = await call("/events")
+  attSel.innerHTML = evs.map(e => `<option value="${e.eventId}">${e.title}</option>`).join("")
+  loadAttendees()
+}
+
+async function loadAttendees() {
+  const rows = await call(`/events/${attSel.value}/registrations`)
+  attTable.innerHTML = "<tr><th>Name</th><th>Reg no</th><th>Ticket</th></tr>" +
+    rows.map(r => `<tr><td>${r.name}</td><td>${r.regno}</td><td>${r.ticket}</td></tr>`).join("")
+}
+
+async function createEvent() {
+  createMsg.className = "msg"
+  try {
+    await call("/events", {
+      method: "POST",
+      body: JSON.stringify({ title: nTitle.value, venue: nVenue.value, date: nDate.value, capacity: +nCap.value, category: nCat.value })
+    })
+    createMsg.textContent = "Event published ✔"
+    nTitle.value = nVenue.value = ""
+    loadStats()
+    loadEvents()
+  } catch (e) {
+    createMsg.className = "msg err"
+    createMsg.textContent = e.message
+  }
+}
+
+loadEvents()
+</script>
+</body>
+</html>
